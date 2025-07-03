@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const asyncHandler = require('express-async-handler');
 const { validateUser } = require('../schema/user');
-const bycrypt = require('bcryptjs');
+const bycrypt = require('bcrypt');
 
 /*
 * @methode:GET
