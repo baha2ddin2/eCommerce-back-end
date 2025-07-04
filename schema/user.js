@@ -2,6 +2,7 @@ const joi = require('joi');
 
 function validateUser(user) {
     const schema = joi.object({
+        user :joi.string().min(3).max(30).required(),
         name: joi.string().min(3).max(30).required(),
         email: joi.string().email().required(),
         password: joi.string().min(6).max(50).required(),
@@ -15,6 +16,7 @@ function validateUser(user) {
 
 function validateUpdateUser(user) {
     const schema = joi.object({
+        user :joi.string().min(3).max(30),
         name: joi.string().min(3).max(30),
         email: joi.string().email(),
         password: joi.string().min(6).max(50),

@@ -48,15 +48,15 @@ router.post('/', asyncHandler(async (req, res) => {
         return res.status(400).json({ error: validationError });
     }
     // Insert user into the database
-    const { name, email, password , phone } = req.body;
+    const {user, name, email, password , phone } = req.body;
     // Hash the password before storing it
     const hashedPassword = await bycrypt.hash(password, 10);
-    const sql = "INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)";
-    db.query(sql, [name, email, hashedPassword, phone], (err, results) => {
+    const sql = "INSERT INTO users (user ,name, email, password, phone) VALUES (?, ?, ?, ?,?)";
+    db.query(sql, [user, name, email, hashedPassword, phone], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
         }
-        res.status(201).json({ id: results.insertId, name, email , phone  });
+        res.status(201).json({ user , name, email , phone  });
     })
 }))
 
@@ -81,7 +81,7 @@ router.put('/:user', asyncHandler(async (req, res) => {
     // Hash the password before updating it
     const hashedPassword = await bycrypt.hash(password, 10);
     // Use the hashed password in the update query
-    const sql = "UPDATE users SET name = ?, email = ?, password = ?, phone = ? WHERE id = ?";
+    const sql = "UPDATE users SET name = ?, email = ?, password = ?, phone = ? WHERE user = ?";
     db.query(sql, [name, email, hashedPassword, phone, user], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
@@ -89,9 +89,10 @@ router.put('/:user', asyncHandler(async (req, res) => {
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.status(200).json({ id: userId, name, email });
+        res.status(200).json({ used, name, email });
     })
 }))
+
 
 /**
  * @method DELETE
