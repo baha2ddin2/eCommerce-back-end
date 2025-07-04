@@ -5,9 +5,12 @@ require('dotenv').config();
 // use middelwears
 app.use(express.json());
 
+// routes
 app.use('/api/users',require('./routes/users'))
-
-
+app.use('/api/products', require('./routes/product'))
+app.use('/api/orders', require('./routes/orders'))
+app.use('/api/orderItem',require('./routes/orderItem'))
+app.use('/api/cart',require('./routes/cart'))
 
 app.listen(process.env.PORT , () => {
   console.log(`Server is running on port ${process.env.PORT }`);
