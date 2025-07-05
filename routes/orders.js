@@ -2,7 +2,7 @@ const router = require('express').Router();
 const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateorder, validateUpdateOrder } = require('../schema/order')
-const { checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin } = require('../middlewars/checktoken');
+const { checkTokenAndAdmin, checkUserTokenOrAdmin } = require('../middlewars/checktoken');
 
 
 /**
@@ -12,7 +12,7 @@ const { checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin } = require('../m
 * @description : fetch all orders
 */
 
-router.get('/', checkTokenAndAdmine  , asyncHandler(async (req, res) => {
+router.get('/', checkTokenAndAdmin  , asyncHandler(async (req, res) => {
     const sql = "SELECT * FROM orders"
     const [results] = await db.query(sql);
     res.status(200).json(results);
@@ -25,7 +25,7 @@ router.get('/', checkTokenAndAdmine  , asyncHandler(async (req, res) => {
  * @description: fetch a orders by ID
  */
 
-router.get('/:id', checkTokenAndAdmine ,asyncHandler(async (req, res) => {
+router.get('/:id', checkTokenAndAdmin ,asyncHandler(async (req, res) => {
     const orderId = req.params.id;
     const sql = "SELECT * FROM orders WHERE id = ?";
     const [results] = await db.query(sql, [orderId]);
@@ -38,7 +38,7 @@ router.get('/:id', checkTokenAndAdmine ,asyncHandler(async (req, res) => {
 /**
  * @method GET
  * @route /api/orders/user/:user
- * @access privet
+ * @access private
  * @description: fetch a orders by user name
  */
 
@@ -46,8 +46,8 @@ router.get('/user/:user', checkUserTokenOrAdmin ,asyncHandler(async (req, res) =
     const user = req.params.user;
     //check if user exists
     const existsSql = "select * from users where user = ?"
-    const [exists] = await db.query(sql, [user]);
-    if (results.length === 0) {
+    const [result] = await db.query(existsSql, [user]);
+    if (result.length === 0) {
         return res.status(404).json({ error: 'user not found' });
     }
     // Check if the user making the request is the same as the user being updated
@@ -65,7 +65,7 @@ router.get('/user/:user', checkUserTokenOrAdmin ,asyncHandler(async (req, res) =
 /**
  * @method GET
  * @route /api/orders/fullorder/user/:user
- * @access privet
+ * @access private
  * @description: fetch a orders by user name
  */
 
@@ -73,14 +73,15 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
     const user = req.params.user;
     //check if user exists
     const existsSql = "select * from users where user = ?"
-    const [exists] = await db.query(sql, [user]);
-    if (results.length === 0) {
+    const [result] = await db.query(existsSql, [user]);
+    if (result.length === 0) {
         return res.status(404).json({ error: 'user not found' });
     }
     // Check if the user making the request is the same as the user being updated
     if (req.user.user !== user) {
         return res.status(403).json({ error: 'You are not allowed to update this user' });
     }
+
     const sql = `SELECT
         o.id AS order_id,
         u.name AS customer_name,
@@ -88,11 +89,11 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
         oi.quantity,
         oi.price,
         (oi.quantity * oi.price) AS total_price
-    FROM order_items oi
-    JOIN orders o ON oi.order_id = o.id
-    JOIN users u ON o.user = u.user
-    JOIN products p ON oi.product_id = p.id
-    WHERE u.user = ?`;
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN users u ON o.user = u.user
+        JOIN products p ON oi.product_id = p.id
+        WHERE u.user = ?`;
     const [results] = await db.query(sql, [user]);
     if (results.length === 0) {
         return res.status(404).json({ error: 'order not found' });
@@ -127,21 +128,17 @@ router.post('/', asyncHandler(async (req, res) => {
 /**
  * @method PUT
  * @route /api/orders/:id
- * @access public
+ * @access private
  * @description update a order by ID
  */
 
-router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
+router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
     const orderId = req.params.id;
 
     // Validate request body
     const validationError = validateUpdateOrder(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
-    }
-    // Check if the user making the request is the same as the user being updated
-    if (req.user.user !== user||req.user.role =='admin') {
-        return res.status(403).json({ error: 'You are not allowed to update this user' });
     }
     // Update order in the database
     const { user, total, status } = req.body;
@@ -161,11 +158,11 @@ router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
 /**
  * @method DELETE
  * @route /api/orders/:id
- * @access privet
+ * @access private
  * @description delete a order by ID
  */
 
-router.delete('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
+router.delete('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
     const orderId = req.params.id;
     const sql = "DELETE FROM orders WHERE id = ?";
     db.query(sql, [orderId], (err, results) => {
@@ -183,7 +180,4 @@ router.delete('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
     })
 }))
 
-
-
 module.exports = router;
-

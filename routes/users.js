@@ -6,14 +6,12 @@ const { validateUser, validateUpdateUser } = require('../schema/user');
 const bycrypt = require('bcrypt');
 const {checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin} = require('../middlewars/checktoken')
 
-
 /**
-* @method GET
-* @route :/api/users
-* @access privet
-* @description:fetch all users
-*/
-
+ * @method GET
+ * @route /api/users
+ * @access private
+ * @description Fetch all users
+ */
 router.get('/', checkTokenAndAdmine, asyncHandler(async (req, res) => {
     const sql = "SELECT * FROM users"
     const [results] = await db.query(sql);
@@ -21,10 +19,10 @@ router.get('/', checkTokenAndAdmine, asyncHandler(async (req, res) => {
 }));
 
 /**
- * @method  GET
- * @route  /api/users/:user
+ * @method GET
+ * @route /api/users/:id
  * @access public
- * @description  fetch a user by his user name
+ * @description Fetch a user by their ID
  */
 router.get('/:id', asyncHandler(async (req, res) => {
     const user = req.params.id;
@@ -37,12 +35,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }));
 
 /**
-* @method POST
-* @route /api/users
-* @access public
-* @description create a new user
-*/
-
+ * @method POST
+ * @route /api/users
+ * @access public
+ * @description Create a new user
+ */
 router.post('/', asyncHandler(async (req, res) => {
     // Validate request body
     const validationError = validateUser(req.body);
@@ -65,11 +62,10 @@ router.post('/', asyncHandler(async (req, res) => {
 /**
  * @method PUT
  * @route /api/users/:user
- * @access public
- * @description update a user by ID
+ * @access private
+ * @description Update a user by username
  */
-
-router.put('/:user',checkToken ,asyncHandler(async (req, res) => {
+router.put('/:user', checkToken, asyncHandler(async (req, res) => {
     const user = req.params.user;
     // Validate request body
     const validationError = validateUpdateUser(req.body);
@@ -90,23 +86,20 @@ router.put('/:user',checkToken ,asyncHandler(async (req, res) => {
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.status(200).json({ used, name, email });
+        res.status(200).json({ user, name, email });
     })
 }))
-
 
 /**
  * @method DELETE
  * @route /api/users/:id
- * @access privet
- * @description delete a user by ID
+ * @access private
+ * @description Delete a user by ID
  */
-
-router.delete('/:id', checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
-
-    // Check if the user making the request is the same as the user being updated
-    if (req.user.user !== user|| req.user.role !=="admine") {
-        return res.status(403).json({ error: 'You are not allowed to update this user' });
+router.delete('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
+    // Check if the user making the request is the same as the user being deleted or is an admin
+    if (req.user.user !== user || req.user.role !== "admine") {
+        return res.status(403).json({ error: 'You are not allowed to delete this user' });
     }
     const userId = req.params.id;
     const sql = "DELETE FROM users WHERE id = ?";

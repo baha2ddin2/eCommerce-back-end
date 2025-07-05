@@ -2,15 +2,14 @@ const router = require('express').Router();
 const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateProduct, validateUpdateProduct } = require('../schema/product')
-const { checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin } = require('../middlewars/checktoken');
+const { checkTokenAndAdmine } = require('../middlewars/checktoken');
 
 /**
-* @method GET
-* @route :/api/products
-* @access:public
-* @description:fetch all product
-*/
-
+ * @method GET
+ * @route /api/products
+ * @access public
+ * @description Fetch all products
+ */
 router.get('/', asyncHandler(async (req, res) => {
     const sql = "SELECT * FROM products"
     const [results] = await db.query(sql);
@@ -21,9 +20,8 @@ router.get('/', asyncHandler(async (req, res) => {
  * @method GET
  * @route /api/products/:id
  * @access public
- * @description: fetch a products by ID
-*/
-
+ * @description Fetch a product by ID
+ */
 router.get('/:id', asyncHandler(async (req, res) => {
     const productId = req.params.id;
     const sql = "SELECT * FROM products WHERE id = ?";
@@ -35,19 +33,18 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }));
 
 /**
-* @method POST
-* @route /api/products
-* @access privet
-* @description create a new product
-*/
-
+ * @method POST
+ * @route /api/products
+ * @access private (admin only)
+ * @description Create a new product
+ */
 router.post('/', checkTokenAndAdmine ,asyncHandler(async (req, res) => {
     // Validate request body
     const validationError = validateProduct(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
-    // Insert user into the database
+    // Insert product into the database
     const { name, description, price, stock, image } = req.body;
     const sql = "INSERT INTO products (name, description, price,stock,image_url) VALUES (?, ?, ? , ?, ? )";
     db.query(sql, [name, description, price, stock, image], (err, results) => {
@@ -61,10 +58,9 @@ router.post('/', checkTokenAndAdmine ,asyncHandler(async (req, res) => {
 /**
  * @method PUT
  * @route /api/products/:id
- * @access public
- * @description update a product by ID
+ * @access private (admin only)
+ * @description Update a product by ID
  */
-
 router.put('/:id', checkTokenAndAdmine, asyncHandler(async (req, res) => {
     const productId = req.params.id;
 
@@ -83,17 +79,16 @@ router.put('/:id', checkTokenAndAdmine, asyncHandler(async (req, res) => {
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'product not found' });
         }
-        res.status(200).json({ id: userId, name, email });
+        res.status(200).json({ id: productId, name, description, price, stock, image });
     })
 }))
 
 /**
  * @method DELETE
  * @route /api/products/:id
- * @access public
- * @description delete a product by ID
+ * @access private (admin only)
+ * @description Delete a product by ID
  */
-
 router.delete('/:id', checkTokenAndAdmine , asyncHandler(async (req, res) => {
     const productId = req.params.id;
     const sql = "DELETE FROM products WHERE id = ?";
@@ -108,7 +103,4 @@ router.delete('/:id', checkTokenAndAdmine , asyncHandler(async (req, res) => {
     })
 }))
 
-
-
 module.exports = router;
-
