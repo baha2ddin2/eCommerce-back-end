@@ -6,6 +6,15 @@ const router = require('express').Router()
 require('dotenv').config()
 const bcrypt = require('bcrypt');
 
+
+/**
+ *  @method POST
+ *  @route /api/login
+ *  @desc Login user
+ *  @access Public
+ *  @body {email, password}
+ */
+
 router.post('/', asyncHandler(async (req, res) => {
     const  error = validateLogin(req.body);
     if (error) {
@@ -21,10 +30,10 @@ router.post('/', asyncHandler(async (req, res) => {
     }
     const user = results[0];
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-        return res.status(401).json({ error: 'email or password incorrect' });
-    }
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // if (!isPasswordValid) {
+    //     return res.status(401).json({ error: 'email or password incorrect' });
+    // }
+    const token = jwt.sign({ user: user.user, role : user.role  }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token, info: {
         user :user.user,
         name : user.name,

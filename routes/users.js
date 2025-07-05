@@ -4,6 +4,8 @@ const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateUser, validateUpdateUser } = require('../schema/user');
 const bycrypt = require('bcrypt');
+const {checkToken, checkTokenAndAdmine} = require('../middlewars/checktoken')
+
 
 /**
 * @method GET
@@ -12,7 +14,7 @@ const bycrypt = require('bcrypt');
 * @description:fetch all users
 */
 
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', checkTokenAndAdmine, asyncHandler(async (req, res) => {
     const sql = "SELECT * FROM users"
     const [results] = await db.query(sql);
     res.status(200).json(results);
@@ -67,13 +69,16 @@ router.post('/', asyncHandler(async (req, res) => {
  * @description update a user by ID
  */
 
-router.put('/:user', asyncHandler(async (req, res) => {
-    const user = req.params.id;
-
+router.put('/:user',checkToken ,asyncHandler(async (req, res) => {
+    const user = req.params.user;
     // Validate request body
     const validationError = validateUpdateUser(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
+    }
+    // Check if the user making the request is the same as the user being updated
+    if (req.user.user !== user) {
+        return res.status(403).json({ error: 'You are not allowed to update this user' });
     }
     // Update user in the database
     const { name, email, password , phone } = req.body;
