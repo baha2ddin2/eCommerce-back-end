@@ -46,6 +46,12 @@ router.post('/', asyncHandler(async (req, res) => {
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
+    //check if already exists
+    const userExistsSql = "SELECT * FROM users WHERE user = ? OR email = ?";
+    const [userExists] = await db.query(userExistsSql, [req.body.user, req.body.email]);
+    if (userExists.length > 0) {
+        return res.status(400).json({ error: 'Username or email already exists' });
+    }
     // Insert user into the database
     const {user, name, email, password , phone } = req.body;
     // Hash the password before storing it
@@ -71,6 +77,12 @@ router.put('/:user', checkToken, asyncHandler(async (req, res) => {
     const validationError = validateUpdateUser(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
+    }
+    //check if user exist
+    const userExistsSql = "SELECT * FROM users WHERE user = ?";
+    const [userExists] = await db.query(userExistsSql, [user]);
+    if (userExists.length == 0) {
+        return res.status(400).json({ error: 'the user not exists' });
     }
     // Update user in the database
     const { name, email, password , phone } = req.body;
