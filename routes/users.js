@@ -4,7 +4,7 @@ const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateUser, validateUpdateUser } = require('../schema/user');
 const bycrypt = require('bcrypt');
-const {checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin} = require('../middlewars/checktoken')
+const {checkToken, checkTokenAndAdmin, checkUserTokenOrAdmin} = require('../middlewars/checktoken')
 
 /**
  * @method GET
@@ -12,7 +12,7 @@ const {checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin} = require('../mid
  * @access private
  * @description Fetch all users
  */
-router.get('/', checkTokenAndAdmine, asyncHandler(async (req, res) => {
+router.get('/', checkTokenAndAdmin, asyncHandler(async (req, res) => {
     const sql = "SELECT * FROM users"
     const [results] = await db.query(sql);
     res.status(200).json(results);
