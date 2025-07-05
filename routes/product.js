@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateProduct, validateUpdateProduct } = require('../schema/product')
+const { checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin } = require('../middlewars/checktoken');
 
 /**
 * @method GET
@@ -36,11 +37,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
 /**
 * @method POST
 * @route /api/products
-* @access public
-* @description create a new user
+* @access privet
+* @description create a new product
 */
 
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', checkTokenAndAdmine ,asyncHandler(async (req, res) => {
     // Validate request body
     const validationError = validateProduct(req.body);
     if (validationError) {
@@ -64,7 +65,7 @@ router.post('/', asyncHandler(async (req, res) => {
  * @description update a product by ID
  */
 
-router.put('/:id', asyncHandler(async (req, res) => {
+router.put('/:id', checkTokenAndAdmine, asyncHandler(async (req, res) => {
     const productId = req.params.id;
 
     // Validate request body
@@ -93,7 +94,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
  * @description delete a product by ID
  */
 
-router.delete('/:id', asyncHandler(async (req, res) => {
+router.delete('/:id', checkTokenAndAdmine , asyncHandler(async (req, res) => {
     const productId = req.params.id;
     const sql = "DELETE FROM products WHERE id = ?";
     db.query(sql, [productId], (err, results) => {

@@ -2,15 +2,16 @@ const router = require('express').Router();
 const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateOrderItem, validateUpdateOrderItem } = require('../schema/orderItem');
+const { checkTokenAndAdmin, checkUserTokenOrAdmin } = require('../middlewars/checktoken');
 
 /**
 * @method GET
 * @route  /api/ordersItem
-* @access public
+ * @access private
 * @description : fetch all orders Items
 */
 
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/',checkTokenAndAdmin, asyncHandler(async (req, res) => {
     const sql = "SELECT * FROM order_item"
     const [results] = await db.query(sql);
     res.status(200).json(results);
@@ -19,10 +20,10 @@ router.get('/', asyncHandler(async (req, res) => {
 /**
  * @method GET
  * @route /api/ordersItem/:id
- * @access public
- * @description: fetch a order item by ID
+ * @access privet
+ * @description: fetch order items by user
  */
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', checkTokenAndAdmin ,asyncHandler(async (req, res) => {
     const orderItemId = req.params.id;
     const sql = "SELECT * FROM order_item WHERE id = ?";
     const [results] = await db.query(sql, [orderItemId]);
@@ -38,8 +39,19 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * @access public
  * @description: fetch a order item by ID
  */
-router.get('/user/:user', asyncHandler(async (req, res) => {
+router.get('/user/:user', checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
     const user = req.params.user;
+    //check if user exists
+    const existsSql = "select * from users where username = ?"
+    const [exists] = await db.query(existsSql, [user]);
+    if (exists.length === 0) {
+        return res.status(404).json({ error: 'user not found' });
+    }
+    // Ensure req.user is set by middleware and compare correct fields
+    if (!req.user || req.user.user !== user) {
+        return res.status(403).json({ error: 'You are not allowed to update this user' });
+    }
+
     const sql = `SELECT
     order_items.id AS order_item_id,
     orders.id AS order_id,
@@ -52,7 +64,7 @@ router.get('/user/:user', asyncHandler(async (req, res) => {
     JOIN orders ON order_items.order_id = orders.id
     JOIN users ON orders.user = users.user
     JOIN products ON order_items.product_id = products.id
-    where users.user= ?`;
+    where users.user = ?`;
     const [results] = await db.query(sql, [user]);
     if (results.length === 0) {
         return res.status(404).json({ error: 'order item not found' });
@@ -76,12 +88,8 @@ router.post('/', asyncHandler(async (req, res) => {
     // Insert order item into the database
     const { orderId, productId, quantity, price } = req.body;
     const sql = "INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
-    db.query(sql, [orderId, productId, quantity, price], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        res.status(201).json({ id: results.insertId, orderId, productId, quantity, price });
-    })
+    const [results] = await db.query(sql, [orderId, productId, quantity, price]);
+    res.status(201).json({ id: results.insertId, orderId, productId, quantity, price });
 }))
 
 /**
@@ -91,17 +99,27 @@ router.post('/', asyncHandler(async (req, res) => {
  * @description update a order item by ID
  */
 
-router.put('/:id', asyncHandler(async (req, res) => {
+router.put('/:id', checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
     const orderItemId = req.params.id;
-
     // Validate request body
     const validationError = validateUpdateOrderItem(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
+
+    // Check if the user making the request is the same as the user being updated
+    const userSql =`select * from orders
+    join order_item on order_items.order_id = orders.id where  order_items.id = ?  `
+    const [ result ]=db.query(userSql, [orderId])
+    // Check if the user making the request is the same as the user being updated
+    if (req.user.user !== result[0].user || req.user.role == "admin") {
+        return res.status(403).json({ error: 'You are not allowed to update this user' });
+    }
+
     // Update order item in the database
     const { orderId, productId, quantity, price } = req.body;
     const sql = "UPDATE order_item SET order_id = ?, product_id = ?, quantity = ?, price = ? WHERE id = ?";
+
     db.query(sql, [orderId, productId, quantity, price, orderItemId], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
@@ -109,6 +127,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'order item not found' });
         }
+        // Return the updated order item
         res.status(200).json({ id: orderItemId, productId, quantity, price });
     })
 }))
@@ -122,6 +141,14 @@ router.put('/:id', asyncHandler(async (req, res) => {
 
 router.delete('/:id', asyncHandler(async (req, res) => {
     const orderItemId = req.params.id;
+    // Check if the user making the request is the same as the user being updated
+    const userSql =`select * from orders
+    join order_item on order_items.order_id = orders.id where  order_items.id = ?  `
+    const [ result ]=db.query(userSql, [orderId])
+    // Check if the user making the request is the same as the user being updated
+    if (req.user.user !== result[0].user || req.user.role == "admin") {
+        return res.status(403).json({ error: 'You are not allowed to update this user' });
+    }
     const sql = "DELETE FROM order_item WHERE id = ?";
     db.query(sql, [orderItemId], (err, results) => {
         if (err) {

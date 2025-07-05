@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 
 /**
  * @method checkToken
- * @description 
+ * @description Middleware to check if the token is valid
  */
 
 function checkToken(req, res, next) {
@@ -28,7 +28,7 @@ function checkToken(req, res, next) {
  * @description Middleware to check if the user is an admin
  */
 
-function checkTokenAndAdmine(req,res,next){
+function checkTokenAndAdmin(req,res,next){
     const token = req.headers.token;
     if (token) {
         try{
@@ -77,4 +77,4 @@ function checkUserTokenOrAdmin(req,res,next){
 
 }
 
-module.exports={ checkToken ,checkTokenAndAdmine , checkUserTokenOrAdmin }
+module.exports={ checkToken ,checkTokenAndAdmin , checkUserTokenOrAdmin }

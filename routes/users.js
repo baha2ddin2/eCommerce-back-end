@@ -4,13 +4,13 @@ const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateUser, validateUpdateUser } = require('../schema/user');
 const bycrypt = require('bcrypt');
-const {checkToken, checkTokenAndAdmine} = require('../middlewars/checktoken')
+const {checkToken, checkTokenAndAdmine, checkUserTokenOrAdmin} = require('../middlewars/checktoken')
 
 
 /**
 * @method GET
 * @route :/api/users
-* @access:public
+* @access privet
 * @description:fetch all users
 */
 
@@ -76,10 +76,6 @@ router.put('/:user',checkToken ,asyncHandler(async (req, res) => {
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
-    // Check if the user making the request is the same as the user being updated
-    if (req.user.user !== user) {
-        return res.status(403).json({ error: 'You are not allowed to update this user' });
-    }
     // Update user in the database
     const { name, email, password , phone } = req.body;
 
@@ -102,11 +98,16 @@ router.put('/:user',checkToken ,asyncHandler(async (req, res) => {
 /**
  * @method DELETE
  * @route /api/users/:id
- * @access public
+ * @access privet
  * @description delete a user by ID
  */
 
-router.delete('/:id', asyncHandler(async (req, res) => {
+router.delete('/:id', checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
+
+    // Check if the user making the request is the same as the user being updated
+    if (req.user.user !== user|| req.user.role !=="admine") {
+        return res.status(403).json({ error: 'You are not allowed to update this user' });
+    }
     const userId = req.params.id;
     const sql = "DELETE FROM users WHERE id = ?";
     db.query(sql, [userId], (err, results) => {
