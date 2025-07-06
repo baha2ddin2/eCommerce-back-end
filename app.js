@@ -2,9 +2,21 @@ const express = require('express');
 const app = express();
 const {notFound,errorhandel}=require('./middlewars/error');
 require('dotenv').config();
+const helmet = require('helmet');
+const cors = require('cors');
 
 // use middelwears
 app.use(express.json());
+
+//helmet
+app.use(helmet())
+
+// cors
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+}));
 
 // routes
 app.use('/api/users',require('./routes/users'))
