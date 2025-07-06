@@ -3,8 +3,7 @@ const joi = require('joi');
 
 function validateOrder(order) {
     const schema = joi.object({
-        userId: joi.number().integer().min(1).required(),
-        productId: joi.number().integer().min(1).required(),
+        user: joi.string().integer().min(1).required(),
         total: joi.number().integer().min(1).required(),
         status: joi.string().valid('pending', 'shipped', 'delivered','cancelled').required()
     });
@@ -16,8 +15,7 @@ function validateOrder(order) {
 
 function validateUpdateOrder(order){
     const schema = joi.object({
-        userId: joi.number().integer().min(1),
-        productId: joi.number().integer().min(1),
+        user: joi.string().integer().min(1),
         total: joi.number().integer().min(1),
         status: joi.string().valid('pending', 'shipped', 'delivered','cancelled')
     });

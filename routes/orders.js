@@ -115,13 +115,13 @@ router.post('/', asyncHandler(async (req, res) => {
         return res.status(400).json({ error: validationError });
     }
     // Insert order into the database
-    const { userId, total, status } = req.body;
-    const sql = "INSERT INTO orders (user_id, total , status ) VALUES (?, ?, ?)";
-    db.query(sql, [userId, total, status], (err, results) => {
+    const { user, total, status } = req.body;
+    const sql = "INSERT INTO orders (user, total , status ) VALUES (?, ?, ?)";
+    db.query(sql, [user, total, status], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
         }
-        res.status(201).json({ id: results.insertId, userId, total, status });
+        res.status(201).json({ id: results.insertId, user, total, status });
     })
 }))
 
@@ -141,17 +141,17 @@ router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
         return res.status(400).json({ error: validationError });
     }
     // Update order in the database
-    const { user, total, status } = req.body;
+    const { total, status } = req.body;
 
-    const sql = "UPDATE orders SET user_id = ?, total = ?, status = ? WHERE id = ?";
-    db.query(sql, [user, total, status, orderId], (err, results) => {
+    const sql = "UPDATE orders SET total = ?, status = ? WHERE id = ?";
+    db.query(sql, [total, status, orderId], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
         }
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'order not found' });
         }
-        res.status(200).json({ id: orderId, total, status, userId });
+        res.status(200).json({ id: orderId, total, status, user: results.user });
     })
 }))
 

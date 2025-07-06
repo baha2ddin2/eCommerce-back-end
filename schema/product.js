@@ -2,6 +2,8 @@ const joi = require('joi');
 function validateProduct(product) {
     const schema = joi.object({
         name: joi.string().min(3).max(30).required(),
+        mark : joi.string().min(2).max(20).required(),
+        category: joi.string().min(3).max(30).required(),
         price: joi.number().min(0).required(),
         description: joi.string().min(5).max(1000).required(),
         stock: joi.number().integer().min(0).required(),
@@ -16,6 +18,8 @@ function validateProduct(product) {
 function validateUpdateProduct(product){
     const schema = joi.object({
         name: joi.string().min(3).max(30),
+        mark : joi.string().min(2).max(20),
+        category: joi.string().min(3).max(30),
         price: joi.number().min(0),
         description: joi.string().min(5).max(1000),
         stock: joi.number().integer().min(0),

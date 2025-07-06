@@ -45,9 +45,9 @@ router.post('/', checkTokenAndAdmin ,asyncHandler(async (req, res) => {
         return res.status(400).json({ error: validationError });
     }
     // Insert product into the database
-    const { name, description, price, stock, image } = req.body;
-    const sql = "INSERT INTO products (name, description, price,stock,image_url) VALUES (?, ?, ? , ?, ? )";
-    db.query(sql, [name, description, price, stock, image], (err, results) => {
+    const { name, mark, category, description, price, stock, image } = req.body;
+    const sql = "INSERT INTO products (name, mark, category, description, price, stock, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    db.query(sql, [name, mark, category, description, price, stock, image], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
         }
@@ -70,9 +70,9 @@ router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
         return res.status(400).json({ error: validationError });
     }
     // Update product in the database
-    const { name, description, price, stock, image } = req.body;
-    const sql = "UPDATE products SET name = ?, description = ?, price = ?,stock = ?,image_url = ? WHERE id = ?";
-    db.query(sql, [name, description, price, stock, image, productId], (err, results) => {
+    const { name, mark, category, description, price, stock, image } = req.body;
+    const sql = "UPDATE products SET name = ?, mark = ?, category = ?, description = ?, price = ?, stock = ?, image_url = ? WHERE id = ?";
+    db.query(sql, [name, mark, category, description, price, stock, image, productId], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
         }
