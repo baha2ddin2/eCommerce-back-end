@@ -70,8 +70,6 @@ router.get('/user/:user', checkUserTokenOrAdmin ,asyncHandler(async (req, res) =
     res.status(200).json(results);
 }));
 
-
-
 /**
 * @method POST
 * @route /api/cart

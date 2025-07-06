@@ -61,6 +61,7 @@ router.post('/' ,asyncHandler(async (req, res) => {
  * @access private (admin only)
  * @description Update a product by ID
  */
+
 // router.put('/:id',, asyncHandler(async (req, res) => {
 //     const productId = req.params.id;
 
@@ -90,17 +91,14 @@ router.post('/' ,asyncHandler(async (req, res) => {
  * @description Delete a review by ID
  */
 router.delete('/:id', checkToken , asyncHandler(async (req, res) => {
-    const productId = req.params.id;
+    const reviewId = req.params.id;
     const sql = "DELETE FROM reviews WHERE id = ?";
-    db.query(sql, [productId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        if (results.affectedRows === 0) {
-            return res.status(404).json({ error: 'review not found' });
-        }
-        res.status(200).send({ message: 'review deleted successfully' });
-    })
+    [results] = await db.query(sql, [reviewId])
+    if (results.affectedRows === 0) {
+        return res.status(404).json({ error: 'review not found' });
+    }
+
+    return res.status(200).json({ message: 'review deleted successfully' });
 }))
 
 module.exports = router;
