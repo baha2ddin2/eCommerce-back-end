@@ -15,7 +15,6 @@ function validateCard(card) {
 
 function validateUpdateCard(card){
     const schema = joi.object({
-        user: joi.string().integer().min(1),
         productId: joi.number().integer().min(1),
         quantity: joi.number().integer().min(1),
 

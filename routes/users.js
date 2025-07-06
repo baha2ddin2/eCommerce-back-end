@@ -108,22 +108,20 @@ router.put('/:user', checkToken, asyncHandler(async (req, res) => {
  * @access private
  * @description Delete a user by ID
  */
-router.delete('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
+router.delete('/:user', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
     // Check if the user making the request is the same as the user being deleted or is an admin
-    if (req.user.user !== user || req.user.role !== "admine") {
+    if (req.user.user !== user || req.user.role !== "admin") {
         return res.status(403).json({ error: 'You are not allowed to delete this user' });
     }
-    const userId = req.params.id;
-    const sql = "DELETE FROM users WHERE id = ?";
-    db.query(sql, [userId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        if (results.affectedRows === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        res.status(200).send({ message: 'User deleted successfully' });
+    const user = req.params.user;
+    const sql = "DELETE FROM users WHERE user = ?";
+    const [results] = await db.query(sql, [user])
+    if (results.affectedRows === 0) {
+        return res.status(404).json({ error: 'user not found' });
+    }
+
+    return res.status(200).json({ message: 'user deleted successfully' });
     })
-}))
+)
 
 module.exports = router;

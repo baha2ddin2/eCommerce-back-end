@@ -148,15 +148,12 @@ router.delete('/:id', checkTokenAndAdmin ,asyncHandler(async (req, res) => {
     if (req.user.user !== result.user || req.user.role !== "admin") {
         return res.status(403).json({ error: 'You are not allowed to deleted this user' });
     }
-    db.query(sql, [cartId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        if (results.affectedRows === 0) {
-            return res.status(404).json({ error: 'cart not found' });
-        }
-        res.status(200).send({ message: 'cart deleted successfully' });
-    })
+    const [results] = await db.query(sql, [cartId])
+    if (results.affectedRows === 0) {
+        return res.status(404).json({ error: 'cart not found' });
+    }
+
+    return res.status(200).json({ message: 'cart deleted successfully' });
 }))
 
 module.exports = router;

@@ -89,18 +89,15 @@ router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
  * @access private (admin only)
  * @description Delete a product by ID
  */
-router.delete('/:id', checkTokenAndAdmin , asyncHandler(async (req, res) => {
+router.delete('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
     const productId = req.params.id;
     const sql = "DELETE FROM products WHERE id = ?";
-    db.query(sql, [productId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        if (results.affectedRows === 0) {
-            return res.status(404).json({ error: 'product not found' });
-        }
-        res.status(200).send({ message: 'product deleted successfully' });
-    })
+    const [results] = await db.query(sql, [productId])
+    if (results.affectedRows === 0) {
+        return res.status(404).json({ error: 'product not found' });
+    }
+
+    return res.status(200).json({ message: 'product deleted successfully' });
 }))
 
 module.exports = router;

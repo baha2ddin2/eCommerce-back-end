@@ -165,19 +165,11 @@ router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
 router.delete('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
     const orderId = req.params.id;
     const sql = "DELETE FROM orders WHERE id = ?";
-    db.query(sql, [orderId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        if (results.affectedRows === 0) {
-            return res.status(404).json({ error: 'order not found' });
-        }
-        // Check if the user making the request is the same as the user being updated
-        if (req.user.user !== results[0].user || req.user.role !== "admin") {
-            return res.status(403).json({ error: 'You are not allowed to delete this order' });
-        }
-        res.status(200).send({ message: 'order deleted successfully' });
-    })
-}))
+    const [results] = await db.query(sql, [orderId])
+    if (results.affectedRows === 0) {
+        return res.status(404).json({ error: 'order not found' });
+    }
 
+    return res.status(200).json({ message: 'order deleted successfully' });
+}))
 module.exports = router;
