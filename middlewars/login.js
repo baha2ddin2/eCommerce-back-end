@@ -3,7 +3,6 @@ const asyncHandler = require('express-async-handler');
 const db = require('../database/db');
 const { validateLogin } = require('../schema/login');
 const router = require('express').Router()
-require('dotenv').config()
 const bcrypt = require('bcrypt');
 
 
