@@ -2,8 +2,11 @@ const db = require('../database/db')
 const asyncHandler = require('express-async-handler')
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcrypt');
 
-module.exports.forgetPassword = asyncHandler( async (req, res, next) => {
+router.route( asyncHandler( async (req, res, next) => {
     const email = req.body.email
     const sql = "SELECT * FROM users WHERE email = ?";
     const [results] = await db.query(sql, [email]);
@@ -40,4 +43,37 @@ module.exports.forgetPassword = asyncHandler( async (req, res, next) => {
         }
         res.status(200).json({ message: 'Password reset email sent' });
     });
-})
+}))
+
+
+router.route('/reset-password/:userId/:token',asyncHandler(async (req, res) => {
+    const { error } = validateChangePassword(req.body);
+    if(error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+
+    sql = "SELECT * FROM users WHERE user = ?";
+    const [dbUser] = await db.query(sql, [req.params.user]);
+
+    if (dbUser.length===0) {
+        return res.status(404).json({ message: "user not found" });
+    }
+
+    const secret = process.env.JWT_SECRET + user.password;
+    try {
+        jwt.verify(req.params.token, secret);
+
+        const salt = await bcrypt.genSalt(10);
+        req.body.password = await bcrypt.hash(req.body.password, salt);
+
+        const user = dbUser[0];
+        const sql = "UPDATE users SET password = ? WHERE user = ?";
+        const [result] = await db.query(sql, [req.body.password, user.user]);
+        res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        console.log(error);
+        res.json({ message: error });
+    }
+}))
+
+module.exports = router

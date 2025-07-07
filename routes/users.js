@@ -103,10 +103,35 @@ router.put('/:user', checkToken, asyncHandler(async (req, res) => {
 }))
 
 /**
+ * @method PUT
+ * @route reset-password/users/:user
+ * @access private
+ * @description Update the password a user by username
+ */
+router.put('/:user', checkToken, asyncHandler(async (req, res) => {
+    const user = req.params.user;
+    // Update user in the database
+    const   password = req.body.password
+    // Use the hashed password in the update query
+    const sql = "UPDATE users SET  password = ?  WHERE user = ?";
+    db.query(sql, [ password, user], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database query failed' });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.status(200).json({ name :results.name , });
+    })
+}))
+
+
+
+/**
  * @method DELETE
  * @route /api/users/:id
  * @access private
- * @description Delete a user by ID
+ * @description Delete a user
  */
 router.delete('/:user', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
     // Check if the user making the request is the same as the user being deleted or is an admin
