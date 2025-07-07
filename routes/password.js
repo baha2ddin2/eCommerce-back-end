@@ -5,8 +5,16 @@ const nodemailer = require("nodemailer");
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const { validateChangePassword } = require('../schema/password');
 
-router.route( asyncHandler( async (req, res, next) => {
+/**
+ * @method POST
+ * @route /api/password/reset
+ * @access public
+ * @description send link for reset password in the user email
+ */
+
+router.route( "/reset",asyncHandler( async (req, res) => {
     const email = req.body.email
     const sql = "SELECT * FROM users WHERE email = ?";
     const [results] = await db.query(sql, [email]);
@@ -19,7 +27,7 @@ router.route( asyncHandler( async (req, res, next) => {
     const token = jwt.sign({ user: user.user , email: user.email }, secret, { expiresIn: '1h' });
     const link = `http://my-app.com/reset-password/${user.user}/${token}`;
 
-    // todo : Generate a password reset token and send it to the user's email
+    //  Generate a password reset token and send it to the user's email
     const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -41,12 +49,20 @@ router.route( asyncHandler( async (req, res, next) => {
         if (error) {
             return res.status(500).json({ error: 'Failed to send email' });
         }
-        res.status(200).json({ message: 'Password reset email sent' });
+        res.status(200).json({ message: 'Password reset email sent successfully check your email' });
     });
 }))
 
+/**
+ * @method POST
+ * @route /api/password/reset-password/:user/:token
+ * @access private
+ * @description change the password
+ */
 
-router.route('/reset-password/:userId/:token',asyncHandler(async (req, res) => {
+
+
+router.route('/reset-password/:user/:token',asyncHandler(async (req, res) => {
     const { error } = validateChangePassword(req.body);
     if(error) {
         return res.status(400).json({ message: error.details[0].message });
@@ -70,6 +86,7 @@ router.route('/reset-password/:userId/:token',asyncHandler(async (req, res) => {
         const sql = "UPDATE users SET password = ? WHERE user = ?";
         const [result] = await db.query(sql, [req.body.password, user.user]);
         res.status(200).json({ message: "Password updated successfully" });
+        console.log(result)
     } catch (error) {
         console.log(error);
         res.json({ message: error });

@@ -33,6 +33,35 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * @method GET
+ * @route /api/products
+ * @access public
+ * @description Fetch paginated products
+ * @query page (default: 1), limit (default: 10)
+ */
+router.get('/', asyncHandler(async (req, res) => {
+    // Extract page and limit from query params with defaults
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Total number of products
+    const [[{ total }]] = await db.query("SELECT COUNT(*) AS total FROM products");
+
+    // Fetch paginated products
+    const [products] = await db.query("SELECT * FROM products LIMIT ? OFFSET ?", [limit, offset]);
+
+    res.status(200).json({
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        data: products
+    });
+}));
+
+
+/**
  * @method POST
  * @route /api/products
  * @access private (admin only)

@@ -61,7 +61,8 @@ router.post('/', asyncHandler(async (req, res) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
         }
-        res.status(201).json({ user , name, email , phone  });
+        const token = jwt.sign({ user: results.user, role : results.role  }, process.env.JWT_SECRET, { expiresIn: '10 d' });
+        res.status(201).json({ user , name, email , phone,token  });
     })
 }))
 
