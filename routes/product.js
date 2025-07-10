@@ -34,22 +34,60 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
 /**
  * @method GET
+ * @route /api/products/category
+ * @access public
+ * @description fetch all product categories
+ */
+
+router.get('/category', asyncHandler(async (req, res) => {
+    const sql = "SELECT DISTINCT category FROM products"
+    const [results] = await db.query(sql);
+    res.status(200).json(results);
+}));
+
+
+
+/**
+ * @method GET
  * @route /api/products
  * @access public
- * @description Fetch paginated products
- * @query page (default: 1), limit (default: 10)
+ * @description Fetch paginated, filtered, and sorted products
+ * @query page (default: 1), limit (default: 10), category (optional), sortBy (optional), order (asc|desc)
  */
 router.get('/', asyncHandler(async (req, res) => {
-    // Extract page and limit from query params with defaults
+    // Extract query params
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const category = req.query.category;
+    const sortBy = req.query.sortBy || 'id'; // Default sort by ID
+    const order = (req.query.order === 'desc') ? 'DESC' : 'ASC';
     const offset = (page - 1) * limit;
 
-    // Total number of products
-    const [[{ total }]] = await db.query("SELECT COUNT(*) AS total FROM products");
+    // Validate allowed sort columns
+    const allowedSortFields = ['id', 'name', 'price', 'stock'];
+    if (!allowedSortFields.includes(sortBy)) {
+        return res.status(400).json({ error: 'Invalid sortBy value' });
+    }
 
-    // Fetch paginated products
-    const [products] = await db.query("SELECT * FROM products LIMIT ? OFFSET ?", [limit, offset]);
+    // Base query
+    let countQuery = `SELECT COUNT(*) AS total FROM products`;
+    let dataQuery = `SELECT * FROM products`;
+    const queryParams = [];
+
+    // Filter by category
+    if (category) {
+        countQuery += ` WHERE category = ?`;
+        dataQuery += ` WHERE category = ?`;
+        queryParams.push(category);
+    }
+
+    // Add sorting and pagination
+    dataQuery += ` ORDER BY ${sortBy} ${order} LIMIT ? OFFSET ?`;
+    queryParams.push(limit, offset);
+
+    // Execute queries
+    const [[{ total }]] = await db.query(countQuery, category ? [category] : []);
+    const [products] = await db.query(dataQuery, queryParams);
 
     res.status(200).json({
         page,
@@ -59,6 +97,7 @@ router.get('/', asyncHandler(async (req, res) => {
         data: products
     });
 }));
+
 
 
 /**
@@ -111,6 +150,7 @@ router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
         res.status(200).json({ id: productId, name, description, price, stock, image });
     })
 }))
+
 
 /**
  * @method DELETE

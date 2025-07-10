@@ -7,6 +7,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { validateChangePassword } = require('../schema/password');
 
+
 /**
  * @method POST
  * @route /api/password/reset

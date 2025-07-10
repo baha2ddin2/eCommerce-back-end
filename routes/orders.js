@@ -54,7 +54,7 @@ router.get('/user/:user', checkUserTokenOrAdmin ,asyncHandler(async (req, res) =
     if (req.user.user !== user) {
         return res.status(403).json({ error: 'You are not allowed to update this user' });
     }
-    const sql = "SELECT orders.id AS order_id,users.name AS customer_name,orders.total, orders.status, orders.created_at FROM orders JOIN users ON orders.user = users.user WHERE users.user = ? ";
+    const sql = "SELECT orders.id AS order_id,users.name AS customer_name,orders.total, orders.status, orders.created_at , orders.adress FROM orders JOIN users ON orders.user = users.user WHERE users.user = ? ";
     const [results] = await db.query(sql, [user]);
     if (results.length === 0) {
         return res.status(404).json({ error: 'order not found' });
@@ -89,6 +89,7 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
         oi.quantity,
         oi.price,
         (oi.quantity * oi.price) AS total_price
+        o.adress
         FROM order_items oi
         JOIN orders o ON oi.order_id = o.id
         JOIN users u ON o.user = u.user
@@ -116,7 +117,7 @@ router.post('/', asyncHandler(async (req, res) => {
     }
     // Insert order into the database
     const { user, total, status } = req.body;
-    const sql = "INSERT INTO orders (user, total , status ) VALUES (?, ?, ?)";
+    const sql = "INSERT INTO orders (user, total , status , adress ) VALUES (?, ?, ?)";
     db.query(sql, [user, total, status], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
