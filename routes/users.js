@@ -5,6 +5,7 @@ const asyncHandler = require('express-async-handler');
 const { validateUser, validateUpdateUser } = require('../schema/user');
 const bycrypt = require('bcrypt');
 const {checkToken, checkTokenAndAdmin, checkUserTokenOrAdmin} = require('../middlewars/checktoken')
+const jwt = require("jsonwebtoken")
 
 /**
  * @method GET
@@ -57,13 +58,11 @@ router.post('/', asyncHandler(async (req, res) => {
     // Hash the password before storing it
     const hashedPassword = await bycrypt.hash(password, 10);
     const sql = "INSERT INTO users (user ,name, email, password, phone) VALUES (?, ?, ?, ?,?)";
-    db.query(sql, [user, name, email, hashedPassword, phone], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        const token = jwt.sign({ user: results.user, role : results.role  }, process.env.JWT_SECRET, { expiresIn: '10 d' });
-        res.status(201).json({ user , name, email , phone,token  });
-    })
+    const [rows] = await db.query(sql, [user, name, email, hashedPassword, phone])
+    const [fetchedRows] = await db.query("SELECT * FROM users WHERE user = ?", [user]);
+    const newUser = fetchedRows[0];
+    const token = jwt.sign({ user: newUser.user, role : newUser.role  }, process.env.JWT_SECRET, { expiresIn: '10d' });
+    res.status(201).json({ user :newUser.user , name :newUser.name, email : newUser.email , phone : newUser.phone, token  });
 }))
 
 /**
