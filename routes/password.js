@@ -15,7 +15,7 @@ const { validateChangePassword } = require('../schema/password');
  * @description send link for reset password in the user email
  */
 
-router.route( "/reset",asyncHandler( async (req, res) => {
+router.post( "/reset",asyncHandler( async (req, res) => {
     const email = req.body.email
     const sql = "SELECT * FROM users WHERE email = ?";
     const [results] = await db.query(sql, [email]);
@@ -26,13 +26,16 @@ router.route( "/reset",asyncHandler( async (req, res) => {
     const user = results[0];
     const secret = process.env.JWT_SECRET + user.password; // Use user's password as part of the secret
     const token = jwt.sign({ user: user.user , email: user.email }, secret, { expiresIn: '1h' });
-    const link = `http://my-app.com/reset-password/${user.user}/${token}`;
+    const link = `http://localhost:3000/reset-password/${user.user}/${token}`;
 
     //  Generate a password reset token and send it to the user's email
     const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         service: "gmail",
         auth: {
-            user: process.env.USER_EMAIL,
+            user: process.env.USER_MAIL,
             pass: process.env.USER_PASS
         }
     });
@@ -48,7 +51,9 @@ router.route( "/reset",asyncHandler( async (req, res) => {
     }
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            return res.status(500).json({ error: 'Failed to send email' });
+            console.log(process.env.USER_MAIL)
+            console.log(process.env.USER_PASS)
+            return res.status(500).json({ error: 'Failed to send email', det : error.message });
         }
         res.status(200).json({ message: 'Password reset email sent successfully check your email' });
     });
