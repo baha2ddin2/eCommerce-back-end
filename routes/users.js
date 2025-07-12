@@ -21,13 +21,13 @@ router.get('/', checkTokenAndAdmin, asyncHandler(async (req, res) => {
 
 /**
  * @method GET
- * @route /api/users/:id
+ * @route /api/users/:user
  * @access public
- * @description Fetch a user by their ID
+ * @description Fetch a user by their user name
  */
-router.get('/:id', asyncHandler(async (req, res) => {
-    const user = req.params.id;
-    const sql = "SELECT * FROM users WHERE id = ?";
+router.get('/:user', asyncHandler(async (req, res) => {
+    const user = req.params.user;
+    const sql = "SELECT * FROM users WHERE user = ?";
     const [results] = await db.query(sql, [user]);
     if (results.length === 0) {
         return res.status(404).json({ error: 'User not found' });

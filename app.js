@@ -13,9 +13,9 @@ app.use(helmet())
 
 // cors
 app.use(cors({
-  origin: '*', // Allow all origins
+  origin: 'http://localhost:3000', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+  allowedHeaders: ['Content-Type', 'Authorization','token'] // Allowed headers
 }));
 
 // routes
