@@ -4,12 +4,16 @@ const {notFound,errorhandel}=require('./middlewars/error');
 require('dotenv').config();
 const helmet = require('helmet');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 // use middelwears
 app.use(express.json());
 
 //helmet
 app.use(helmet())
+
+//use cookies
+app.use(cookieParser());
 
 // cors
 app.use(cors({

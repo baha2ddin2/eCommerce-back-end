@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
  */
 
 function checkToken(req, res, next) {
-    const token = req.headers.token;
+    const token = req.cookies.token;
     if (token) {
         try{
             const decoded=jwt.verify(token, process.env.JWT_SECRET);
@@ -28,7 +28,7 @@ function checkToken(req, res, next) {
  */
 
 function checkTokenAndAdmin(req,res,next){
-    const token = req.headers.token;
+    const token = req.cookies.token;
     if (token) {
         try{
             const decoded=jwt.verify(token, process.env.JWT_SECRET);
@@ -54,12 +54,11 @@ function checkTokenAndAdmin(req,res,next){
  */
 
 function checkUserTokenOrAdmin(req,res,next){
-    const token = req.headers.token;
+    const token = req.cookies.token;
     if (token) {
         try{
             const decoded=jwt.verify(token, process.env.JWT_SECRET);
             console.log(decoded)
-            req.user = decoded
             if(decoded.role === 'admin' || decoded.user === req.params.user){
                 req.user = decoded
                 next();

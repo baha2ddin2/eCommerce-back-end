@@ -25,10 +25,11 @@ router.get('/', checkTokenAndAdmin, asyncHandler(async (req, res) => {
  * @access public
  * @description Fetch a user by their user name
  */
-router.get('/:user', asyncHandler(async (req, res) => {
+router.get('/:user',checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
     const user = req.params.user;
     const sql = "SELECT * FROM users WHERE user = ?";
     const [results] = await db.query(sql, [user]);
+
     if (results.length === 0) {
         return res.status(404).json({ error: 'User not found' });
     }
@@ -62,7 +63,13 @@ router.post('/', asyncHandler(async (req, res) => {
     const [fetchedRows] = await db.query("SELECT * FROM users WHERE user = ?", [user]);
     const newUser = fetchedRows[0];
     const token = jwt.sign({ user: newUser.user, role : newUser.role  }, process.env.JWT_SECRET, { expiresIn: '10d' });
-    res.status(201).json({ user :newUser.user , name :newUser.name, email : newUser.email , phone : newUser.phone, token  });
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: false, // true in production with HTTPS
+        sameSite: 'lax', // 'strict' or 'none' (use 'none' with https and cross-domain)
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+    res.status(201).json({ user :newUser.user , name :newUser.name, email : newUser.email , phone : newUser.phone  });
 }))
 
 /**

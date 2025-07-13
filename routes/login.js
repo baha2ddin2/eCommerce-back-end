@@ -33,6 +33,13 @@ router.post('/', asyncHandler(async (req, res) => {
     //     return res.status(401).json({ error: 'email or password incorrect' });
     // }
     const token = jwt.sign({ user: user.user, role : user.role  }, process.env.JWT_SECRET, { expiresIn: '10 d' });
+    res.cookie('token', token, {
+    httpOnly: true,
+    secure: false, // true in production with HTTPS
+    sameSite: 'lax', // 'strict' or 'none' (use 'none' with https and cross-domain)
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
     res.status(200).json({ token, info: {
         user :user.user,
         name : user.name,
