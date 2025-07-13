@@ -19,7 +19,8 @@ app.use(cookieParser());
 app.use(cors({
   origin: 'http://localhost:3000', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization','token'] // Allowed headers
+  allowedHeaders: ['Content-Type', 'Authorization','token'], // Allowed headers
+  credentials: true
 }));
 
 // routes

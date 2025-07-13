@@ -47,5 +47,13 @@ router.post('/', asyncHandler(async (req, res) => {
         phone:user.phone
     }});
 }));
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    sameSite: 'Lax',
+    secure: false
+  });
+  res.send({ message: 'Logged out' });
+});
 
 module.exports=router
