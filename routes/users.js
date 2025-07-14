@@ -27,8 +27,9 @@ router.get('/', checkTokenAndAdmin, asyncHandler(async (req, res) => {
  */
 router.get('/:user',checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
     const user = req.params.user;
-    const sql = "SELECT * FROM users WHERE user = ?";
+    const sql = "SELECT * FROM users WHERE `user` = ?";
     const [results] = await db.query(sql, [user]);
+    console.log("DB Query results:", results);
 
     if (results.length === 0) {
         return res.status(404).json({ error: 'User not found' });
