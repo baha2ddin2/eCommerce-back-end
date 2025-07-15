@@ -47,6 +47,38 @@ router.post('/', asyncHandler(async (req, res) => {
         phone:user.phone
     }});
 }));
+
+/**
+ *  @method GET
+ *  @route /login/check-auth
+ *  @desc check auth of  user
+ *  @access Public
+ */
+
+router.get("/check-auth", (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ isAuthenticated: false });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return res.json({ isAuthenticated: true, user: decoded });
+  } catch (err) {
+    return res.status(401).json({error : err.message ,isAuthenticated: false });
+  }
+});
+
+
+/**
+ *  @method POST
+ *  @route /login/logout
+ *  @desc logout user
+ *  @access Public
+ */
+
+
 router.post('/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
