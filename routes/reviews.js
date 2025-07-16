@@ -22,9 +22,10 @@ router.get('/', asyncHandler(async (req, res) => {
  * @access public
  * @description Fetch a reviews by ID
  */
+
 router.get('/:id', asyncHandler(async (req, res) => {
     const reviewId = req.params.id;
-    const sql = "SELECT * FROM reviews WHERE id = ?";
+    const sql = "SELECT * FROM reviews WHERE product_id = ?";
     const [results] = await db.query(sql, [reviewId]);
     if (results.length === 0) {
         return res.status(404).json({ error: 'review not found' });

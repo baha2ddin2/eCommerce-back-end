@@ -78,7 +78,6 @@ router.get("/check-auth", (req, res) => {
  *  @access Public
  */
 
-
 router.post('/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,

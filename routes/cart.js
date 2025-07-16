@@ -101,35 +101,32 @@ router.post('/', asyncHandler(async (req, res) => {
  * @description update a cart by ID
  */
 
-router.put('/:id', checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
+router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
     const cartId = req.params.id;
     // Validate request body
     const validationError = validateUpdateCard(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
-    const userSql ="select * from cart where id = ?"
-    const [result] = await db.query(userSql , [cartId])
-    if (req.user.user !== result.user|| req.user.role !== "admin") {
-        return res.status(403).json({ error: 'You are not allowed to update this user' });
+    const userSql = "SELECT * FROM cart WHERE id = ?";
+    const [rows] = await db.query(userSql, [cartId]);
+    if (rows.length === 0) {
+        return res.status(404).json({ error: 'Cart item not found' });
     }
+    const cart = rows[0];
+    // 🛡️ Check if the user owns the cart or is admin
+    if (req.user.user !== cart.user && req.user.role !== "admin") {
+        return res.status(403).json({ error: 'You are not allowed to update this cart' });
+    }
+    const { quantity } = req.body;
+    const updateSql = "UPDATE cart SET quantity = ? WHERE id = ?";
+    const [updateResult] = await db.query(updateSql, [quantity, cartId]);
+    if (updateResult.affectedRows === 0) {
+        return res.status(404).json({ error: 'Cart not updated' });
+    }
+    res.status(200).json({ cart_id: cartId, quantity });
+}));
 
-    // Update cart in the database
-    const { productId, quantity } = req.body;
-    const sql = "UPDATE cart SET  product_id = ?, quantity = ? WHERE id = ?";
-    db.query(sql, [ productId, quantity, cartId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        if (results.affectedRows === 0) {
-            return res.status(404).json({ error: 'cart not found' });
-        }
-        if (req.user.user !== results.user|| req.user.role !== "admin") {
-        return res.status(403).json({ error: 'You are not allowed to update this user' });
-        }
-        res.status(200).json({ id: cartId , productId, quantity });
-    })
-}))
 
 /**
  * @method DELETE
