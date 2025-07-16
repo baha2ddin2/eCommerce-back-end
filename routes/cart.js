@@ -135,20 +135,20 @@ router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
  * @description delete a cart by ID
  */
 
-router.delete('/:id', checkTokenAndAdmin ,asyncHandler(async (req, res) => {
-    const cartId = req.params.id;
-    const sql = "DELETE FROM cart WHERE id = ?";
-    const userSql ="select * from cart where id = ?"
-    const [result] = await db.query(userSql , [cartId])
-    if (req.user.user !== result.user || req.user.role !== "admin") {
-        return res.status(403).json({ error: 'You are not allowed to deleted this user' });
-    }
-    const [results] = await db.query(sql, [cartId])
-    if (results.affectedRows === 0) {
-        return res.status(404).json({ error: 'cart not found' });
-    }
+router.delete('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
+  const cartId = req.params.id;
+  const [result] = await db.query("SELECT * FROM cart WHERE id = ?", [cartId]);
 
-    return res.status(200).json({ message: 'cart deleted successfully' });
-}))
+  if (!result || result.length === 0) {
+    return res.status(404).json({ error: 'Cart not found' });
+  }
+  const cart = result[0]; // get the item from array
+  if (req.user.user !== cart.user && req.user.role !== "admin") {
+    return res.status(403).json({ error: 'You are not allowed to delete this cart item' });
+  }
+  const [results] = await db.query("DELETE FROM cart WHERE id = ?", [cartId]);
+  return res.status(200).json({ message: 'Cart deleted successfully', id: cartId });
+}));
+
 
 module.exports = router;
