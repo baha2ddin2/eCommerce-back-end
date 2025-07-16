@@ -11,7 +11,7 @@ const { checkTokenAndAdmin } = require('../middlewars/checktoken');
  * @description Fetch all products
  */
 router.get('/', asyncHandler(async (req, res) => {
-    const sql = "SELECT * FROM products"
+    const sql = "SELECT p.id,p.name,p.mark,p.price,p.stock,p.image_url, ROUND(AVG(r.rating), 1) AS average_rating , COUNT(r.id) AS total_reviews FROM  products p LEFT JOIN  reviews r ON p.id = r.product_id GROUP BY  p.id, p.name, p.mark, p.price, p.stock, p.image_url;"
     const [results] = await db.query(sql);
     res.status(200).json(results);
 }));

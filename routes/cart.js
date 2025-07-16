@@ -78,21 +78,46 @@ router.get('/user/:user', checkUserTokenOrAdmin ,asyncHandler(async (req, res) =
 */
 
 router.post('/', asyncHandler(async (req, res) => {
-    // Validate request body
     const validationError = validateCard(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
-    // Insert user into the database
     const { user, productId, quantity } = req.body;
+
+    // تحقق إذا المنتج موجود مسبقًا في السلة لتجنب الخطأ
+    const exists = await new Promise((resolve, reject) => {
+        db.query(
+            'SELECT * FROM cart WHERE user = ? AND product_id = ?',
+            [user, productId],
+            (err, results) => {
+                if (err) return reject(err);
+                resolve(results.length > 0);
+            }
+        );
+    });
+
+    if (exists) {
+        return res.status(400).json({ error: 'Product already in cart' });
+    }
+
+    // أدخل المنتج في السلة
     const sql = "INSERT INTO cart (user, product_id, quantity) VALUES (?, ?, ?)";
-    db.query(sql, [user, productId, quantity], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        res.status(201).json({ id: results.insertId, user, productId, quantity });
-    })
-}))
+    try {
+        const result = await new Promise((resolve, reject) => {
+            db.query(sql, [user, productId, quantity], (err, results) => {
+                if (err) return reject(err);
+                resolve(results);
+            });
+        });
+        res.status(201).json({ id: result.insertId, user, productId, quantity });
+    } catch (error) {
+        console.error('Database insertion error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}));
+
+
+
 
 /**
  * @method PUT

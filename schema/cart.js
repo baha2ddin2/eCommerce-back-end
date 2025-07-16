@@ -3,7 +3,7 @@ const joi = require('joi');
 
 function validateCard(card) {
     const schema = joi.object({
-        user: joi.string().integer().min(1).required(),
+        user: joi.string().min(1).required(),
         productId: joi.number().integer().min(1).required(),
         quantity: joi.number().integer().min(1).required()
     });
