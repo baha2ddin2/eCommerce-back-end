@@ -22,6 +22,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization','token'], // Allowed headers
   credentials: true
 }));
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.url} called`);
+  next();
+});
 
 // routes
 app.use('/api/users',require('./routes/users'))
