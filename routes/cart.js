@@ -85,8 +85,8 @@ router.post('/', asyncHandler(async (req, res) => {
     }
     const { user, productId, quantity } = req.body;
     try{
-        const exists = await db.query('SELECT * FROM cart WHERE user = ? AND product_id = ?',[user, productId])
-        if (exists.length > 0) {
+        const [exists] = await db.query('SELECT * FROM cart WHERE user = ? AND product_id = ?',[user, productId])
+        if (exists.length !== 0) {
             return res.status(400).json({ error: 'Product already in cart' });
         }
     }catch(err){

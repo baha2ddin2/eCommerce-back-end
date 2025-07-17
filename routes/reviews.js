@@ -30,7 +30,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     if (results.length === 0) {
         return res.status(404).json({ error: 'review not found' });
     }
-    res.status(200).json(results[0]);
+    res.status(200).json(results);
 }));
 
 /**
@@ -48,12 +48,12 @@ router.post('/' ,asyncHandler(async (req, res) => {
     // Insert review into the database
     const { productId, user, rating, comment } = req.body;
     const sql = "INSERT INTO reviews (product_id , user , rating , comment) VALUES (?, ?, ?, ?)";
-    db.query(sql, [productId, user, rating, comment], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
+    try{
+        const results = db.query(sql, [productId, user, rating, comment])
         res.status(201).json({ id: results.insertId, productId , user , rating , comment});
-    })
+    }catch(err){
+        return res.status(500).json({ error: 'Database query failed' });
+    }
 }))
 
 /**
@@ -93,7 +93,7 @@ router.post('/' ,asyncHandler(async (req, res) => {
  */
 router.delete('/:id', checkToken , asyncHandler(async (req, res) => {
     const reviewId = req.params.id;
-    const sql = "DELETE FROM reviews WHERE id = ?";
+    const sql = "DELETE FROM reviews WHERE product_id = ?";
     [results] = await db.query(sql, [reviewId])
     if (results.affectedRows === 0) {
         return res.status(404).json({ error: 'review not found' });
