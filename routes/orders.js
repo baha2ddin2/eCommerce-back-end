@@ -79,16 +79,17 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
     }
     // Check if the user making the request is the same as the user being updated
     if (req.user.user !== user) {
-        return res.status(403).json({ error: 'You are not allowed to update this user' });
+        return res.status(403).json({ error: 'You are not allowed to view orders for this user' });
     }
 
     const sql = `SELECT
+        o.status,
         o.id AS order_id,
         u.name AS customer_name,
         p.name AS product_name,
         oi.quantity,
         oi.price,
-        (oi.quantity * oi.price) AS total_price
+        (oi.quantity * oi.price) AS total_price ,
         o.adress
         FROM order_items oi
         JOIN orders o ON oi.order_id = o.id
