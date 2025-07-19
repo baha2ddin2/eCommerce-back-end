@@ -6,6 +6,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const { validateChangePassword } = require('../schema/password');
+const Joi = require('joi');  // if using CommonJS
+
 
 
 /**
@@ -17,9 +19,10 @@ const { validateChangePassword } = require('../schema/password');
 
 router.post( "/reset",asyncHandler( async (req, res) => {
     const email = req.body.email
+    console.log(email)
     const sql = "SELECT * FROM users WHERE email = ?";
     const [results] = await db.query(sql, [email]);
-
+    console.log(results)
     if (results.length === 0) {
         return res.status(404).json({ error: 'User not found' });
     }
@@ -51,8 +54,6 @@ router.post( "/reset",asyncHandler( async (req, res) => {
     }
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            console.log(process.env.USER_MAIL)
-            console.log(process.env.USER_PASS)
             return res.status(500).json({ error: 'Failed to send email', det : error.message });
         }
         res.status(200).json({ message: 'Password reset email sent successfully check your email' });
@@ -66,21 +67,17 @@ router.post( "/reset",asyncHandler( async (req, res) => {
  * @description change the password
  */
 
-
-
-router.route('/reset-password/:user/:token',asyncHandler(async (req, res) => {
+router.put('/reset-password/:user/:token',asyncHandler(async (req, res) => {
     const { error } = validateChangePassword(req.body);
     if(error) {
         return res.status(400).json({ message: error.details[0].message });
     }
-
-    sql = "SELECT * FROM users WHERE user = ?";
-    const [dbUser] = await db.query(sql, [req.params.user]);
-
+    const usersql = "SELECT * FROM users WHERE user = ?";
+    const [dbUser] = await db.query(usersql, [req.params.user]);
     if (dbUser.length===0) {
         return res.status(404).json({ message: "user not found" });
     }
-
+    const user = dbUser[0]
     const secret = process.env.JWT_SECRET + user.password;
     try {
         jwt.verify(req.params.token, secret);
