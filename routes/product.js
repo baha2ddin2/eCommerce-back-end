@@ -18,6 +18,19 @@ router.get('/', asyncHandler(async (req, res) => {
 
 /**
  * @method GET
+ * @route /api/products/category
+ * @access public
+ * @description fetch all product categories
+ */
+
+router.get('/category', asyncHandler(async (req, res) => {
+    const sql = "SELECT DISTINCT category FROM products"
+    const [results] = await db.query(sql);
+    res.status(200).json(results);
+}));
+
+/**
+ * @method GET
  * @route /api/products/:id
  * @access public
  * @description Fetch a product by ID
@@ -32,18 +45,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     res.status(200).json(results[0]);
 }));
 
-/**
- * @method GET
- * @route /api/products/category
- * @access public
- * @description fetch all product categories
- */
 
-router.get('/category', asyncHandler(async (req, res) => {
-    const sql = "SELECT DISTINCT category FROM products"
-    const [results] = await db.query(sql);
-    res.status(200).json(results);
-}));
 
 
 

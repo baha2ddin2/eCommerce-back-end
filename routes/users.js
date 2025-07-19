@@ -3,9 +3,11 @@ const router = express.Router();
 const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateUser, validateUpdateUser } = require('../schema/user');
-const bycrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 const {checkToken, checkTokenAndAdmin, checkUserTokenOrAdmin} = require('../middlewars/checktoken')
 const jwt = require("jsonwebtoken")
+
+
 
 /**
  * @method GET
@@ -36,6 +38,37 @@ router.get('/:user',checkUserTokenOrAdmin ,asyncHandler(async (req, res) => {
     }
     res.status(200).json(results[0]);
 }));
+
+/**
+ * @method PUT
+ * @route api/users/change-password/:user
+ * @access private
+ * @description Update the password a user by username
+ */
+router.put('/change-password/:user', checkToken, asyncHandler(async (req, res) => {
+    const user = req.params.user;
+    // Update user in the database
+    const {oldPassword , password} = req.body
+    const [userPassword] = await db.query("SELECT password FROM users WHERE user = ?", [user]);
+    if (userPassword.length === 0) {
+        return res.status(404).json({ error: 'password not found' });
+    }
+    const isPasswordValid = await bycrypt.compare(oldPassword, userPassword[0].password);
+    if (!isPasswordValid) {
+        return res.status(401).json({ error: 'the old password incorect' });
+    }
+    // Use the hashed password in the update query
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = "UPDATE users SET  password = ?  WHERE user = ?";
+    const [results] = await db.query(sql, [hashedPassword, user])
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.status(200).json({ name :results.name });
+}))
+
+
+
 
 /**
  * @method POST
@@ -93,36 +126,37 @@ router.put('/:user', checkToken, asyncHandler(async (req, res) => {
         return res.status(400).json({ error: 'the user not exists' });
     }
     // Update user in the database
-    const { name, email, password , phone } = req.body;
+    const { name, email , phone } = req.body;
+    console.log("Updating user with:", { name, email, phone, user });
 
-    // Hash the password before updating it
-    const hashedPassword = await bycrypt.hash(password, 10);
     // Use the hashed password in the update query
-    const sql = "UPDATE users SET name = ?, email = ?, password = ?, phone = ? WHERE user = ?";
-    db.query(sql, [name, email, hashedPassword, phone, user], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
+    const sql = "UPDATE users SET name = ?, email = ?, phone = ? WHERE user = ?";
+    try{
+        const [results] = await db.query(sql, [name, email, String(phone), user])
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.status(200).json({ user, name, email });
-    })
+        res.status(200).json({ user, name, email,phone });
+    }catch(err){
+        return res.status(500).json({ error: err });
+    }
 }))
 
 /**
  * @method PUT
- * @route reset-password/users/:user
+ * @route users/reset-password/:user
  * @access private
  * @description Update the password a user by username
  */
-router.put('/:user', checkToken, asyncHandler(async (req, res) => {
+router.put('/reset-password/:user', checkToken, asyncHandler(async (req, res) => {
     const user = req.params.user;
     // Update user in the database
-    const   password = req.body.password
+    const  password = req.body.password
     // Use the hashed password in the update query
+    // Hash the password before updating it
+    const hashedPassword = await bycrypt.hash(password, 10);
     const sql = "UPDATE users SET  password = ?  WHERE user = ?";
-    db.query(sql, [ password, user], (err, results) => {
+    db.query(sql, [ hashedPassword, user], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });
         }
@@ -132,6 +166,8 @@ router.put('/:user', checkToken, asyncHandler(async (req, res) => {
         res.status(200).json({ name :results.name , });
     })
 }))
+
+
 
 
 

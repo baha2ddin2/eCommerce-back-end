@@ -6,7 +6,7 @@ function validateUser(user) {
         name: joi.string().min(3).max(30).required(),
         email: joi.string().email().required(),
         password: joi.string().min(6).max(50).required(),
-        phone : joi.string().pattern(/^\d{10}$/).required(), // Assuming phone is a 10-digit number
+        phone : joi.string().pattern(/^\d{10}$/).required(),
     });
     const { error } = schema.validate(user);
     if (error) {
@@ -19,8 +19,8 @@ function validateUpdateUser(user) {
         user :joi.string().min(3).max(30),
         name: joi.string().min(3).max(30),
         email: joi.string().email(),
-        password: joi.string().min(6).max(50),
-        phone : joi.string().pattern(/^\d{10}$/), // Assuming phone is a 10-digit number
+        password: joi.string().min(6).max(50).optional(),
+        phone : joi.string().pattern(/^\d{10}$/),
     });
     const { error } = schema.validate(user);
     if (error) {
