@@ -56,6 +56,7 @@ router.get('/user/:user', checkUserTokenOrAdmin ,asyncHandler(async (req, res) =
     cart.id AS cart_id,
     users.name AS customer_name,
     products.name AS product_name,
+    products.id AS product_id,
     cart.quantity,
     products.price,
     (cart.quantity * products.price) AS total_line_price

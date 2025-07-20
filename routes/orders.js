@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
-const { validateorder, validateUpdateOrder } = require('../schema/order')
+const { validateOrder, validateUpdateOrder } = require('../schema/order')
 const { checkTokenAndAdmin, checkUserTokenOrAdmin } = require('../middlewars/checktoken');
 
 
@@ -85,6 +85,7 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
     const sql = `SELECT
         o.status,
         o.id AS order_id,
+        p.id as product_id,
         u.name AS customer_name,
         p.name AS product_name,
         oi.quantity,
@@ -100,6 +101,7 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
     if (results.length === 0) {
         return res.status(404).json({ error: 'order not found' });
     }
+    console.log(results[0].id)
     res.status(200).json(results);
 }));
 
@@ -112,19 +114,18 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
 
 router.post('/', asyncHandler(async (req, res) => {
     // Validate request body
-    const validationError = validateorder(req.body);
+    const validationError = validateOrder(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
     // Insert order into the database
-    const { user, total, status } = req.body;
-    const sql = "INSERT INTO orders (user, total , status , adress ) VALUES (?, ?, ?)";
-    db.query(sql, [user, total, status], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        res.status(201).json({ id: results.insertId, user, total, status });
-    })
+    const { user, total ,adress } = req.body;
+    const sql = "INSERT INTO orders (user, total , adress ) VALUES (?, ?, ?)";
+    const [results] = await db.query(sql, [user, total, adress])
+    if (results.affectedRows === 0) {
+        return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.status(201).json({ id: results.insertId, user, total, adress});
 }))
 
 /**

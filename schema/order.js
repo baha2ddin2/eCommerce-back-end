@@ -3,10 +3,9 @@ const joi = require('joi');
 
 function validateOrder(order) {
     const schema = joi.object({
-        user: joi.string().integer().min(1).required(),
-        total: joi.number().integer().min(1).required(),
-        status: joi.string().valid('pending', 'shipped', 'delivered','cancelled').required(),
-        adress : joi.string().integer().min(1).required()
+        user: joi.string().max(45).min(1).required(),
+        total: joi.number().min(1).required(),
+        adress : joi.string().min(1).max(200).required()
     });
     const { error } = schema.validate(order);
     if (error) {
@@ -18,7 +17,7 @@ function validateUpdateOrder(order){
     const schema = joi.object({
         total: joi.number().integer().min(1),
         status: joi.string().valid('pending', 'shipped', 'delivered','cancelled'),
-        adress :joi.string().integer().min(1)
+        adress :joi.string().min(1).max(200)
     });
     const { error } = schema.validate(order);
     if (error) {

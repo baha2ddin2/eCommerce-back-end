@@ -25,4 +25,4 @@ const photoUpload = multer({
     }
 })
 
-module.exports = photoUpload
+module.exports = photoUpload.single("image") // 'image' is the field name in the form

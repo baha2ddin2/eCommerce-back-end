@@ -95,7 +95,7 @@ router.post('/', asyncHandler(async (req, res) => {
     // Insert user into the database
     const {user, name, email, password , phone } = req.body;
     // Hash the password before storing it
-    const hashedPassword = await bycrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const sql = "INSERT INTO users (user ,name, email, password, phone) VALUES (?, ?, ?, ?,?)";
     const [rows] = await db.query(sql, [user, name, email, hashedPassword, phone])
     const [fetchedRows] = await db.query("SELECT * FROM users WHERE user = ?", [user]);

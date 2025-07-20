@@ -84,10 +84,11 @@ router.post('/', asyncHandler(async (req, res) => {
         return res.status(400).json({ error: validationError });
     }
     // Insert order item into the database
-    const { orderId, productId, quantity, price } = req.body;
-    const sql = "INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
-    const [results] = await db.query(sql, [orderId, productId, quantity, price]);
-    res.status(201).json({ id: results.insertId, orderId, productId, quantity, price });
+    const { orderid, productId, quantity, price } = req.body;
+    console.log(req.body)
+    const sql = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
+    const [results] = await db.query(sql, [orderid, productId, quantity, price]);
+    res.status(201).json({ id: results.insertId, orderid, productId, quantity, price });
 }))
 
 /**
