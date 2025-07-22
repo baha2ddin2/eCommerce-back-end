@@ -6,10 +6,8 @@ const { validateUser, validateUpdateUser } = require('../schema/user');
 const bcrypt = require('bcrypt');
 const {checkToken, checkTokenAndAdmin, checkUserTokenOrAdmin} = require('../middlewars/checktoken')
 const jwt = require("jsonwebtoken")
-const path =require("path")
-const {removeImage ,uploadImage}= require("../utils/cloudinary")
-const fs =require("fs");
-const photoUpload = require('../middlewars/photoUpload');
+
+
 
 
 
@@ -199,25 +197,6 @@ router.delete('/:user', checkUserTokenOrAdmin, asyncHandler(async (req, res) => 
 
 
 
-router.post('/upload-picture', photoUpload, checkTokenAndAdmin, asyncHandler(async(req,res)=>{
-    if(!req.file){
-        res.status(400).json({error:"no file provided  "})
-    }
-    const imagePath =path.join(__dirname,`../images/${req.file.filename}` )
 
-    const result = await uploadImage(imagePath)
-
-    const sql = "UPDATE products SET image_url = ?, public_id = ?  WHERE id = ?"
-    const [product] = await db.query(sql , [result.secure_url, result.public_id ,req.product.id])
-    if (product.affectedRows === 0) {
-        return res.status(404).json({ error: 'Product not found' });
-    }
-    res.status(200).json({
-        message: "image uploaded successfully",
-        image_url: result.secure_url,
-        public_id: result.public_id
-    })
-    fs.unlinkSync(imagePath)
-}))
 
 module.exports = router;

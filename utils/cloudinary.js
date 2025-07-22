@@ -8,7 +8,7 @@ cloudinary.config({
 
 const uploadImage = async (fileUpload)=>{
     try{
-        const data = await cloudinary.UploadStream.upload(fileUpload,{
+        const data = await cloudinary.uploader.upload(fileUpload,{
             resource_type : "auto",
         })
         return data

@@ -106,6 +106,37 @@ router.get('/fullorder/user/:user', checkUserTokenOrAdmin , asyncHandler(async (
 }));
 
 /**
+ * @method GET
+ * @route /api/orders/fullorder/:id
+ * @access private
+ * @description: fetch full order by order id
+ */
+
+router.get('/fullorder/:id', checkTokenAndAdmin , asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    const sql = `SELECT
+        o.status,
+        o.id AS order_id,
+        p.id as product_id,
+        u.name AS customer_name,
+        p.name AS product_name,
+        oi.quantity,
+        oi.price,
+        (oi.quantity * oi.price) AS total_price ,
+        o.adress
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN users u ON o.user = u.user
+        JOIN products p ON oi.product_id = p.id
+        WHERE o.id = ?`;
+    const [results] = await db.query(sql, [id]);
+    if (results.length === 0) {
+        return res.status(404).json({ error: 'order not found' });
+    }
+    res.status(200).json(results);
+}));
+
+/**
 * @method POST
 * @route /api/orders
 * @access public
@@ -145,17 +176,17 @@ router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
     }
     // Update order in the database
     const { total, status } = req.body;
-
     const sql = "UPDATE orders SET total = ?, status = ? WHERE id = ?";
-    db.query(sql, [total, status, orderId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
+    try{
+        const [results]  = await db.query(sql, [total, status, orderId])
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'order not found' });
         }
         res.status(200).json({ id: orderId, total, status, user: results.user });
-    })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({ error: 'Database query failed' });
+    }
 }))
 
 /**

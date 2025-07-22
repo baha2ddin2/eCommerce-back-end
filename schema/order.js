@@ -15,7 +15,7 @@ function validateOrder(order) {
 
 function validateUpdateOrder(order){
     const schema = joi.object({
-        total: joi.number().integer().min(1),
+        total: joi.number().min(1),
         status: joi.string().valid('pending', 'shipped', 'delivered','cancelled'),
         adress :joi.string().min(1).max(200)
     });

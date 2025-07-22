@@ -3,7 +3,10 @@ const db = require('../database/db');
 const asyncHandler = require('express-async-handler');
 const { validateProduct, validateUpdateProduct } = require('../schema/product')
 const { checkTokenAndAdmin } = require('../middlewars/checktoken');
-
+const photoUpload = require('../middlewars/photoUpload');
+const path =require("path")
+const {removeImage ,uploadImage}= require("../utils/cloudinary")
+const fs =require("fs");
 /**
  * @method GET
  * @route /api/products
@@ -110,20 +113,24 @@ router.get('/', asyncHandler(async (req, res) => {
  */
 router.post('/', checkTokenAndAdmin ,asyncHandler(async (req, res) => {
     // Validate request body
+    console.log(req.body)
     const validationError = validateProduct(req.body);
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
     // Insert product into the database
-    const { name, mark, category, description, price, stock, image } = req.body;
-    const sql = "INSERT INTO products (name, mark, category, description, price, stock, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    db.query(sql, [name, mark, category, description, price, stock, image], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        res.status(201).json({ id: results.insertId, description, price, stock, image });
-    })
-}))
+    const { name, mark, category, description, price, stock } = req.body;
+    const sql = "INSERT INTO products (name, mark, category, description, price, stock) VALUES (?, ?, ?, ?, ?, ?)";
+    try{
+        const [results] = await db.query(sql, [name, mark, category, description, price, stock])
+        res.status(201).json({ id: results.insertId, description, price, stock });
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({error : err})
+    }
+})
+)
 
 /**
  * @method PUT
@@ -169,6 +176,27 @@ router.delete('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
     }
 
     return res.status(200).json({ message: 'product deleted successfully' });
+}))
+
+router.post('/upload-picture', photoUpload, checkTokenAndAdmin, asyncHandler(async(req,res)=>{
+    if(!req.file){
+        res.status(400).json({error:"no file provided  "})
+    }
+    const imagePath =path.join(__dirname,`../images/${req.file.filename}` )
+
+    const result = await uploadImage(imagePath)
+    console.log(result)
+    const sql = "UPDATE products SET image_url = ?, public_id = ?  WHERE id = ?"
+    const [product] = await db.query(sql , [result.secure_url, result.public_id ,req.body.id])
+    if (product.affectedRows === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+    }
+    res.status(200).json({
+        message: "image uploaded successfully",
+        image_url: result.secure_url,
+        public_id: result.public_id
+    })
+    fs.unlinkSync(imagePath)
 }))
 
 module.exports = router;
