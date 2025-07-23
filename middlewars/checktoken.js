@@ -59,15 +59,12 @@ function checkUserTokenOrAdmin(req, res, next) {
   if (!token) {
     return res.status(403).json({ message: "No token provided" });
   }
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("Decoded token:", decoded);
     console.log("URL param user:", req.params.user);
-
     const tokenUser = decoded.user?.trim();
-    const paramUser = req.params.user?.trim();
-
+    const paramUser = req.params.user?.trim()
     if (decoded.role === 'admin' || tokenUser === paramUser) {
       req.user = decoded;
       next();

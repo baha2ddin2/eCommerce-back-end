@@ -113,7 +113,7 @@ router.post('/', asyncHandler(async (req, res) => {
  * @description update a cart by ID
  */
 
-router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
+router.put('/:id/:user', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
     const cartId = req.params.id;
     // Validate request body
     const validationError = validateUpdateCard(req.body);
@@ -125,8 +125,9 @@ router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
     if (rows.length === 0) {
         return res.status(404).json({ error: 'Cart item not found' });
     }
+    
     const cart = rows[0];
-    // 🛡️ Check if the user owns the cart or is admin
+    // Check if the user owns the cart or is admin
     if (req.user.user !== cart.user && req.user.role !== "admin") {
         return res.status(403).json({ error: 'You are not allowed to update this cart' });
     }
@@ -147,7 +148,7 @@ router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
  * @description delete a cart by ID
  */
 
-router.delete('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
+router.delete('/:id/:user', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
   const cartId = req.params.id;
   const [result] = await db.query("SELECT * FROM cart WHERE id = ?", [cartId]);
 

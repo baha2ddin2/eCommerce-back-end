@@ -104,19 +104,16 @@ router.put('/:id', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
-
     // Check if the user making the request is the same as the user being updated
     const userSql = `select * from orders
-    join order_item on order_items.order_id = orders.id where  order_items.id = ?  `
+    join order_items on order_items.order_id = orders.id where  order_items.id = ?  `
     const [ result ] = await db.query(userSql, [orderItemId])
     if (req.user.user !== result.user || req.user.role == "admin") {
         return res.status(403).json({ error: 'You are not allowed to update this user' });
     }
-
     // Update order item in the database
     const { orderId, productId, quantity, price } = req.body;
     const sql = "UPDATE order_item SET order_id = ?, product_id = ?, quantity = ?, price = ? WHERE id = ?";
-
     db.query(sql, [orderId, productId, quantity, price, orderItemId], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database query failed' });

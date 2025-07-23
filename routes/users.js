@@ -69,9 +69,6 @@ router.put('/change-password/:user', checkToken, asyncHandler(async (req, res) =
         res.status(200).json({ name :results.name });
 }))
 
-
-
-
 /**
  * @method POST
  * @route /api/users
@@ -91,9 +88,7 @@ router.post('/', asyncHandler(async (req, res) => {
     if (userExists.length > 0) {
         return res.status(400).json({ error: 'Username or email already exists' });
     }
-
     // Insert user into the database
-   
     // Hash the password before storing it
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = "INSERT INTO users (user ,name, email, password, phone) VALUES (?, ?, ?, ?,?)";
