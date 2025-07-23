@@ -129,6 +129,7 @@ router.get('/fullorder/:id', checkTokenAndAdmin , asyncHandler(async (req, res) 
         JOIN users u ON o.user = u.user
         JOIN products p ON oi.product_id = p.id
         WHERE o.id = ?`;
+    
     const [results] = await db.query(sql, [id]);
     if (results.length === 0) {
         return res.status(404).json({ error: 'order not found' });

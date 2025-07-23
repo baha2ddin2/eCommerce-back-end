@@ -84,14 +84,16 @@ router.post('/', asyncHandler(async (req, res) => {
     if (validationError) {
         return res.status(400).json({ error: validationError });
     }
+     const {user, name, email, password , phone } = req.body;
     //check if already exists
     const userExistsSql = "SELECT * FROM users WHERE user = ? OR email = ?";
-    const [userExists] = await db.query(userExistsSql, [req.body.user, req.body.email]);
+    const [userExists] = await db.query(userExistsSql, [user, email]);
     if (userExists.length > 0) {
         return res.status(400).json({ error: 'Username or email already exists' });
     }
+
     // Insert user into the database
-    const {user, name, email, password , phone } = req.body;
+   
     // Hash the password before storing it
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = "INSERT INTO users (user ,name, email, password, phone) VALUES (?, ?, ?, ?,?)";
@@ -180,11 +182,11 @@ router.put('/reset-password/:user', checkToken, asyncHandler(async (req, res) =>
  * @description Delete a user
  */
 router.delete('/:user', checkUserTokenOrAdmin, asyncHandler(async (req, res) => {
+     const user = req.params.user;
     // Check if the user making the request is the same as the user being deleted or is an admin
-    if (req.user.user !== user || req.user.role !== "admin") {
+    if (req.user.user !== user && req.user.role !== "admin") {
         return res.status(403).json({ error: 'You are not allowed to delete this user' });
     }
-    const user = req.params.user;
     const sql = "DELETE FROM users WHERE user = ?";
     const [results] = await db.query(sql, [user])
     if (results.affectedRows === 0) {

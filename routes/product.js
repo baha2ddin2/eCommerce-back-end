@@ -147,18 +147,20 @@ router.put('/:id', checkTokenAndAdmin, asyncHandler(async (req, res) => {
         return res.status(400).json({ error: validationError });
     }
     // Update product in the database
-    const { name, mark, category, description, price, stock, image } = req.body;
-    const sql = "UPDATE products SET name = ?, mark = ?, category = ?, description = ?, price = ?, stock = ?, image_url = ? WHERE id = ?";
-    db.query(sql, [name, mark, category, description, price, stock, image, productId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database query failed' });
-        }
-        if (results.affectedRows === 0) {
+    const { name, mark, category, description, price, stock } = req.body;
+    const sql = "UPDATE products SET name = ?, mark = ?, category = ?, description = ?, price = ?, stock = ? WHERE id = ?";
+    try{
+        db.query(sql, [name, mark, category, description, price, stock, productId])
+         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'product not found' });
         }
-        res.status(200).json({ id: productId, name, description, price, stock, image });
+        res.status(200).json({ id: productId, name, description, price, stock });
+    }catch(err){
+        return res.status(500).json({ error: 'Database query failed' });
+    }
+
     })
-}))
+)
 
 
 /**
